@@ -1,0 +1,361 @@
+{
+  "projectName": "Project Fog of War (NYC)",
+  "lastUpdated": "2025-11-15T17:02:00-05:00",
+  "phases": [
+    {
+      "phaseName": "Phase 1: The 'Solo Explorer' MVP",
+      "phaseStatus": "Not Started",
+      "description": "Build the core 'dopamine loop' for a single user in the NYC-only map.",
+      "epics": [
+        {
+          "epicTitle": "Project Setup & Core Data",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P1_T001",
+              "title": "Setup Mapbox Account & API Keys",
+              "description": "Create the Mapbox account, get the public key for the map, and the secret key for the Map Matching API.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T002",
+              "title": "Acquire & Process NYC Borough GeoJSON",
+              "description": "Download the official NYC Borough Boundaries GeoJSON file. Clean and store this as the 'master fog' for each borough.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Data",
+              "timeframe": "day-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T003",
+              "title": "Initialize Frontend App (iOS/Web)",
+              "description": "Create the initial boilerplate for the mobile or web application.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "day-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T004",
+              "title": "Setup Geospatial Database (PostGIS)",
+              "description": "Initialize a PostgreSQL database with the PostGIS extension to store user polygons and perform geospatial queries.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T019",
+              "title": "Deploy Minimal Backend & Database Environment",
+              "description": "Deploy a simple backend service and PostgreSQL/PostGIS database to a single environment for the MVP (no full CI/CD required).",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T004"
+              ]
+            },
+            {
+              "id": "P1_T020",
+              "title": "Add Basic Logging for Import and Scoring",
+              "description": "Implement minimal logging around GPX import, map matching, unveiled area processing, and scoring to aid debugging.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Backend",
+              "timeframe": "week-1",
+              "dependencies": [
+                "P1_T012"
+              ]
+            }
+          ]
+        },
+        {
+          "epicTitle": "Core Map & 'Fog of War' UI",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P1_T005",
+              "title": "Onboarding: Borough Selection",
+              "description": "Create a one-time screen for a new user to select their single 'focus borough' (e.g., 'Brooklyn').",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T003"
+              ]
+            },
+            {
+              "id": "P1_T006",
+              "title": "Render Mapbox Map & Borough Boundary",
+              "description": "Display the Mapbox map, zoomed to the user's selected borough, with the borough's shape as a boundary.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T001",
+                "P1_T002",
+                "P1_T005"
+              ]
+            },
+            {
+              "id": "P1_T007",
+              "title": "Develop 'Unveiled Area' Data Model",
+              "description": "Backend logic to store a user's *total* unveiled polygon. This will likely be a tile-based system or a simplified, merged polygon.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T004"
+              ]
+            },
+            {
+              "id": "P1_T008",
+              "title": "Render 'Fog of War' Overlay",
+              "description": "Fetch the user's 'unveiled area' and render it as a 'hole' in a semi-transparent 'fog' overlay on the map.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "week-1",
+              "dependencies": [
+                "P1_T006",
+                "P1_T007"
+              ]
+            }
+          ]
+        },
+        {
+          "epicTitle": "Activity Import & Unveiling",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P1_T009",
+              "title": "Build GPX File Uploader",
+              "description": "A simple 'Upload' button that accepts .gpx files and sends them to the backend for processing.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Frontend",
+              "timeframe": "day-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T010",
+              "title": "Build Manual 'Check-in' Button",
+              "description": "A button that gets the user's current GPS location and sends it to the backend to unveil a 100m radius.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Frontend",
+              "timeframe": "week-1",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T011",
+              "title": "Integrate Mapbox Map Matching API",
+              "description": "Backend task. All incoming GPX traces *must* be sent to the Map Matching API to 'snap' them to the road network.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T001",
+                "P1_T009"
+              ]
+            },
+            {
+              "id": "P1_T012",
+              "title": "Backend: Process & Store Unveiled Area",
+              "description": "Main logic: Take the 'snapped' route, create a 25m buffer, and merge this new polygon with the user's total 'unveiled area' in the DB.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T007",
+                "P1_T011"
+              ]
+            },
+            {
+              "id": "P1_T013",
+              "title": "Frontend: 'Unveiling' Replay Animation",
+              "description": "Build the 'magic moment' animation that replays the route, wipes the fog, and plays the 'ding' sound.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "week-1",
+              "dependencies": [
+                "P1_T012"
+              ]
+            },
+            {
+              "id": "P1_T014",
+              "title": "Frontend: Summary Screen",
+              "description": "The screen that appears after the animation, showing '+% explored' and '+ new streets'.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Frontend",
+              "timeframe": "week-1",
+              "dependencies": [
+                "P1_T013"
+              ]
+            }
+          ]
+        },
+        {
+          "epicTitle": "Scoring & Gamification (MVP)",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P1_T015",
+              "title": "Backend: Calculate Borough Percentage",
+              "description": "Create the core calculation: (Area of user's 'unveiled' polygon) / (Total Area of borough polygon) * 100.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T002",
+                "P1_T012"
+              ]
+            },
+            {
+              "id": "P1_T016",
+              "title": "Frontend: Display 'Core Score' on Dashboard",
+              "description": "The main UI element showing 'XX.XX% of Brooklyn Explored'.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "day-1",
+              "dependencies": [
+                "P1_T015"
+              ]
+            },
+            {
+              "id": "P1_T017",
+              "title": "Backend: Simple Mission System",
+              "description": "Logic to check for simple triggers (e.g., 'explored > 5%').",
+              "status": "Not Started",
+              "priority": "Low",
+              "owner": "Backend",
+              "timeframe": "later",
+              "dependencies": []
+            },
+            {
+              "id": "P1_T018",
+              "title": "Content: Create 5 MVP Missions",
+              "description": "Define 5 missions for discovery ('Explore 1 new street') and completion ('Reach 1% of your borough').",
+              "status": "Not Started",
+              "priority": "Low",
+              "owner": "Design",
+              "timeframe": "later",
+              "dependencies": [
+                "P1_T017"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phaseName": "Phase 2: 'Integrations & Magic'",
+      "phaseStatus": "Not Started",
+      "description": "Make the app seamless, 'magic', and expand beyond the NYC-only limitation.",
+      "epics": [
+        {
+          "epicTitle": "Automatic Activity Sync",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P2_T001",
+              "title": "Strava API Integration (OAuth)",
+              "description": "Implement the full OAuth flow to 'Connect with Strava' and automatically pull new activities.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "later",
+              "dependencies": []
+            },
+            {
+              "id": "P2_T002",
+              "title": "Apple HealthKit Integration",
+              "description": "Build the iOS-native module to request permissions and read workout/route data from HealthKit.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Frontend",
+              "timeframe": "later",
+              "dependencies": []
+            }
+          ]
+        },
+        {
+          "epicTitle": "Data Expansion",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P2_T003",
+              "title": "Develop 'Global City' System",
+              "description": "Abstract the NYC-only logic. Find and import neighborhood/boundary data for other major cities.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Data",
+              "timeframe": "later",
+              "dependencies": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "phaseName": "Phase 3: 'Social & Community'",
+      "phaseStatus": "Not Started",
+      "description": "Build community features to drive long-term retention and friendly competition.",
+      "epics": [
+        {
+          "epicTitle": "User Accounts & Social",
+          "epicStatus": "Not Started",
+          "tasks": [
+            {
+              "id": "P3_T001",
+              "title": "Implement User Accounts",
+              "description": "Move from device-only storage to a full user account system (auth, profiles, etc.).",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "later",
+              "dependencies": []
+            },
+            {
+              "id": "P3_T002",
+              "title": "Build Neighborhood Leaderboards",
+              "description": "Create a query to rank all users by their 'explored %' for a specific neighborhood or borough.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Backend",
+              "timeframe": "later",
+              "dependencies": []
+            },
+            {
+              "id": "P3_T003",
+              "title": "Create Social Sharing Image",
+              "description": "A feature to generate a cool image of the user's map and stats, shareable to Instagram, X, etc.",
+              "status": "Not Started",
+              "priority": "Medium",
+              "owner": "Frontend",
+              "timeframe": "later",
+              "dependencies": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
