@@ -1,8 +1,10 @@
 from functools import lru_cache
-from pydantic import BaseSettings, AnyHttpUrl
+
+from pydantic import AnyHttpUrl
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class Settings(BaseSettings):  # type: ignore[misc]
     """Application configuration loaded from environment variables."""
 
     app_name: str = "Fog of Williamsburg Backend"
@@ -17,11 +19,12 @@ class Settings(BaseSettings):
     mapbox_map_matching_base_url: AnyHttpUrl = (  # type: ignore[assignment]
         "https://api.mapbox.com/matching/v5/mapbox/cycling"  # default profile
     )
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    # Inherit env vars from .env, but ignore any extra keys
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 
 @lru_cache()

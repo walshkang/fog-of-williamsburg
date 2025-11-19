@@ -6,11 +6,15 @@ pytest>=8.0.0
 fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 
+# Settings management for Pydantic v2
+pydantic-settings>=2.0.0
+
 # Database and geospatial tooling
 sqlalchemy>=2.0.0
 asyncpg>=0.30.0
 geoalchemy2>=0.15.0
 shapely>=2.0.0
+greenlet>=3.0.0
 
 # HTTP client for Mapbox and external APIs
 httpx>=0.28.0
