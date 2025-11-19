@@ -8,6 +8,8 @@ Usage:
 
 import asyncio
 
+# Import models so that all tables are registered on Base.metadata
+from .. import models  # noqa: F401
 from ..database import Base, engine
 
 

@@ -31,7 +31,12 @@ async def load_boroughs(geojson_path: Path) -> None:
     async with SessionLocal() as session:  # type: AsyncSession
         for feature in features:
             props = feature.get("properties", {})
-            name = props.get("boro_name") or props.get("name")
+            # NYC open data sometimes uses different keys; support a few.
+            name = (
+                props.get("boro_name")
+                or props.get("boroname")
+                or props.get("name")
+            )
             geom = json.dumps(feature.get("geometry"))
             if not name or not geom:
                 continue
