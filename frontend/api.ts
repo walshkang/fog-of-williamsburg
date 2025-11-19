@@ -18,7 +18,7 @@ export type CoreScore = {
 
 // In Expo you can optionally replace this with an env-driven value
 // (e.g., EXPO_PUBLIC_API_BASE_URL) via `app.config`.
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "http://10.17.127.104:8000";
 
 async function request<T>(
   path: string,
