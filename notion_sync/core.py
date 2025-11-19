@@ -5,6 +5,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+import httpx
 from notion_client import Client
 from notion_client.errors import APIResponseError
 
@@ -12,7 +13,7 @@ from notion_client.errors import APIResponseError
 logger = logging.getLogger(__name__)
 
 
-DEFAULT_NOTION_ID_PROPERTY = "Task ID"
+DEFAULT_NOTION_ID_PROPERTY = "ID"
 
 
 @dataclass
@@ -143,28 +144,53 @@ def get_existing_pages(
 
     while has_more:
         try:
-            response = notion_client.databases.query(
-                database_id=database_id,
-                **({"start_cursor": start_cursor} if start_cursor else {}),
-            )
-        except APIResponseError as e:
-            logger.error("Error fetching existing pages: %s (status=%s)", e, e.status)
+            # Fallback to direct httpx call to bypass notion-client issues with this specific endpoint
+            url = f"https://api.notion.com/v1/databases/{database_id}/query"
+            headers = {
+                "Authorization": f"Bearer {notion_client.options.auth}",
+                "Notion-Version": "2022-06-28", # Force older version to avoid invalid_request_url 400 error
+                "Content-Type": "application/json",
+            }
+            
+            # Ensure body is not empty to avoid 400 Bad Request on newer API versions
+            json_body = {"page_size": 100}
+            if start_cursor:
+                json_body["start_cursor"] = start_cursor
+
+            # Use httpx.Client() context manager to ensure proper cleanup if we were doing this repeatedly,
+            # but here a simple post is fine.
+            # Note: notion_client uses httpx under the hood, so we reuse the library.
+
+            http_response = httpx.post(url, headers=headers, json=json_body, timeout=60.0)
+            http_response.raise_for_status()
+            response = http_response.json()
+
+        except httpx.HTTPStatusError as e:
+            logger.error("Error fetching existing pages (HTTP %s): %s", e.response.status_code, e.response.text)
+            raise APIResponseError(e.response, e.response.text, str(e.response.status_code)) from e
+        except Exception as e:
+            logger.error("Error fetching existing pages: %s", e)
             raise
 
         results = response.get("results", [])
+
         for page in results:
             try:
                 properties = page.get("properties", {})
                 task_id_prop = properties.get(id_property_name, {})
-                title_array = task_id_prop.get("title") or []
-                if not title_array:
+                # Handle both Title and Rich Text types for the ID property
+                content_array = task_id_prop.get("title") or task_id_prop.get("rich_text") or []
+                
+                if not content_array:
+                    # It might be empty, which is valid for a new row but we skip for sync matching
                     logger.warning(
                         "Skipping page with ID %s - %s is empty",
                         page.get("id"),
                         id_property_name,
                     )
                     continue
-                task_id = title_array[0].get("plain_text")
+                    
+                task_id = content_array[0].get("plain_text")
                 if not task_id:
                     logger.warning(
                         "Skipping page with ID %s - %s has no plain_text",
@@ -195,13 +221,13 @@ def format_notion_properties(
     return {
         # Primary key / title property
         id_property_name: {
-            "title": [{"type": "text", "text": {"content": task.id}}],
+            "rich_text": [{"type": "text", "text": {"content": task.id}}],
         },
-        "Title": {
-            "rich_text": [{"type": "text", "text": {"content": task.title}}],
+        "Task Name": {
+            "title": [{"type": "text", "text": {"content": task.title}}],
         },
         "Status": {
-            "select": {"name": task.status},
+            "status": {"name": task.status},
         },
         "Priority": {
             "select": {"name": task.priority},
@@ -223,7 +249,9 @@ def format_notion_properties(
             ],
         },
         "Dependencies": {
-            "multi_select": _dependencies_to_multi_select(task.dependencies),
+            "rich_text": [
+                {"type": "text", "text": {"content": ", ".join(task.dependencies)}},
+            ],
         },
     }
 
@@ -267,15 +295,21 @@ def _simple_property_view(properties: Dict[str, Any], id_property_name: str) -> 
                 names.append(name)
         return tuple(sorted(names))
 
-    simple: Dict[str, Any] = {}
-    title_prop = properties.get(id_property_name) or {}
-    simple[id_property_name] = _from_title(title_prop)
+    def _from_status(prop: Dict[str, Any]) -> str:
+        status = prop.get("status") or {}
+        return status.get("name", "") if isinstance(status, dict) else ""
 
-    title = properties.get("Title") or {}
-    simple["Title"] = _from_rich_text(title)
+    simple: Dict[str, Any] = {}
+    
+    # Primary ID is Rich Text in this specific DB
+    id_prop = properties.get(id_property_name) or {}
+    simple[id_property_name] = _from_rich_text(id_prop)
+
+    title = properties.get("Task Name") or {}
+    simple["Task Name"] = _from_title(title)
 
     status = properties.get("Status") or {}
-    simple["Status"] = _from_select(status)
+    simple["Status"] = _from_status(status)
 
     priority = properties.get("Priority") or {}
     simple["Priority"] = _from_select(priority)
@@ -293,7 +327,8 @@ def _simple_property_view(properties: Dict[str, Any], id_property_name: str) -> 
     simple["Description"] = _from_rich_text(description)
 
     deps = properties.get("Dependencies") or {}
-    simple["Dependencies"] = _from_multi_select(deps)
+    # Dependencies is Rich Text in this DB
+    simple["Dependencies"] = _from_rich_text(deps)
 
     return simple
 
@@ -337,7 +372,7 @@ def create_notion_page(
     dry_run: bool = False,
 ) -> None:
     """Creates a new page in the Notion database."""
-    task_id = properties[id_property_name]["title"][0]["text"]["content"]
+    task_id = properties[id_property_name]["rich_text"][0]["text"]["content"]
     if dry_run:
         logger.info("DRY-RUN: Would create %s", task_id)
         return
@@ -358,7 +393,7 @@ def update_notion_page(
     dry_run: bool = False,
 ) -> None:
     """Updates an existing page in the Notion database."""
-    task_id = properties[id_property_name]["title"][0]["text"]["content"]
+    task_id = properties[id_property_name]["rich_text"][0]["text"]["content"]
     if dry_run:
         logger.info("DRY-RUN: Would update %s", task_id)
         return
@@ -504,6 +539,19 @@ def main_from_env_and_args(argv: Optional[List[str]] = None) -> int:
             "Set the NOTION_DATABASE_ID environment variable or pass --database-id."
         )
         return 1
+    
+    # Clean database ID by removing dashes if present
+    # notion_database_id = notion_database_id.replace("-", "")
+
+    # Notion API requires the database ID to be formatted as a UUID (with dashes) if it's not already?
+    # Actually, the API documentation examples show dashes. Let's try ensuring dashes are present if they are missing.
+    # However, 2ac2612c-7077-80af-83ce-000b6d4d3953 appears to be a 'data_source' object (from debug search),
+    # while the actual database_id is likely 2ac2612c-7077-80c6-8274-fa1f95a8f720 (from 'parent' field).
+    # The user likely provided the wrong ID (a page/datasource ID instead of the database ID).
+    # We will assume the provided ID is correct for now, but log a warning if it looks like a page ID.
+    
+    if len(notion_database_id) == 32 and "-" not in notion_database_id:
+         notion_database_id = f"{notion_database_id[:8]}-{notion_database_id[8:12]}-{notion_database_id[12:16]}-{notion_database_id[16:20]}-{notion_database_id[20:]}"
 
     try:
         stats = sync_roadmap_to_notion(

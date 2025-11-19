@@ -1,6 +1,6 @@
 {
   "projectName": "Project Fog of War (NYC)",
-  "lastUpdated": "2025-11-15T17:02:00-05:00",
+  "lastUpdated": "2025-11-19T00:00:00-05:00",
   "phases": [
     {
       "phaseName": "Phase 1: The 'Solo Explorer' MVP",
@@ -35,7 +35,7 @@
               "id": "P1_T003",
               "title": "Initialize Frontend App (iOS/Web)",
               "description": "Create the initial boilerplate for the mobile or web application.",
-              "status": "Not Started",
+              "status": "Done",
               "priority": "High",
               "owner": "Frontend",
               "timeframe": "day-1",
@@ -45,7 +45,7 @@
               "id": "P1_T004",
               "title": "Setup Geospatial Database (PostGIS)",
               "description": "Initialize a PostgreSQL database with the PostGIS extension to store user polygons and perform geospatial queries.",
-              "status": "Not Started",
+              "status": "In Progress",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -55,7 +55,7 @@
               "id": "P1_T019",
               "title": "Deploy Minimal Backend & Database Environment",
               "description": "Deploy a simple backend service and PostgreSQL/PostGIS database to a single environment for the MVP (no full CI/CD required).",
-              "status": "Not Started",
+              "status": "In Progress",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -111,7 +111,7 @@
               "id": "P1_T007",
               "title": "Develop 'Unveiled Area' Data Model",
               "description": "Backend logic to store a user's *total* unveiled polygon. This will likely be a tile-based system or a simplified, merged polygon.",
-              "status": "Not Started",
+              "status": "In Progress",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -175,7 +175,7 @@
               "id": "P1_T012",
               "title": "Backend: Process & Store Unveiled Area",
               "description": "Main logic: Take the 'snapped' route, create a 25m buffer, and merge this new polygon with the user's total 'unveiled area' in the DB.",
-              "status": "Not Started",
+              "status": "In Progress",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -218,7 +218,7 @@
               "id": "P1_T015",
               "title": "Backend: Calculate Borough Percentage",
               "description": "Create the core calculation: (Area of user's 'unveiled' polygon) / (Total Area of borough polygon) * 100.",
-              "status": "Not Started",
+              "status": "In Progress",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -355,6 +355,64 @@
             }
           ]
         }
+      ]
+    }
+  ],
+  "todos": [
+    {
+      "id": "scaffold-backend",
+      "content": "Create FastAPI-based `backend` service with PostGIS connection, basic models, and health-check endpoint",
+      "status": "Completed",
+      "dependencies": []
+    },
+    {
+      "id": "borough-data",
+      "content": "Import NYC borough GeoJSON into PostGIS and expose read-only borough boundary API for frontend",
+      "status": "In Progress",
+      "dependencies": [
+        "scaffold-backend"
+      ]
+    },
+    {
+      "id": "activity-pipeline",
+      "content": "Implement GPX upload, Mapbox Map Matching integration, buffer/merge logic, and manual check-in endpoints",
+      "status": "Pending",
+      "dependencies": [
+        "borough-data"
+      ]
+    },
+    {
+      "id": "scoring-logging",
+      "content": "Implement core percentage scoring endpoint and add logging around import, processing, and scoring operations",
+      "status": "Pending",
+      "dependencies": [
+        "activity-pipeline"
+      ]
+    },
+    {
+      "id": "frontend-onboarding-dashboard",
+      "content": "Implement onboarding borough selection and main dashboard with Mapbox map, fog overlay, and core score display",
+      "status": "Pending",
+      "dependencies": [
+        "borough-data",
+        "scoring-logging"
+      ]
+    },
+    {
+      "id": "frontend-import-unveiling",
+      "content": "Add GPX upload and check-in UI, replay animation, sounds, and post-activity summary screen",
+      "status": "Pending",
+      "dependencies": [
+        "activity-pipeline",
+        "frontend-onboarding-dashboard"
+      ]
+    },
+    {
+      "id": "optional-missions",
+      "content": "Add minimal backend mission system and simple missions UI on the dashboard (optional within Phase 1)",
+      "status": "Pending",
+      "dependencies": [
+        "scoring-logging"
       ]
     }
   ]
