@@ -1,186 +1,167 @@
-## Fog of Williamsburg
+# Fog of War (NYC)
 
-Gamified NYC exploration app with a **"fog of war"** mechanic. Users pick a single NYC borough and gradually unveil it by walking, running, or riding through the streets. This repo contains:
+> **"Civilization VI meets Strava."**
 
-- **Backend**: FastAPI + Postgres/PostGIS (geospatial scoring, borough data, activity processing)
-- **Frontend**: Expo / React Native app (mobile-first, can also run on web in dev)
+Gamifying fitness through exploration. Fog of War tracks your movement (running, cycling, walking) and unveils a "fog of war" map of your city, incentivizing you to take new routes and explore every corner of your neighborhood.
 
-The product vision and roadmap live in `prd.md` and `roadmap.json`.
-
----
-
-## Architecture
-
-- **Backend** (`backend/`)
-  - FastAPI app (`backend.main:app`)
-  - Async Postgres + PostGIS (via `DATABASE_URL`)
-  - Mapbox integration for Map Matching (planned)
-- **Database**
-  - Postgres + PostGIS, provisioned via `docker-compose.yml`
-  - NYC borough GeoJSON in `data/nyc_boroughs.geojson` (import scripts in `backend/scripts/`)
-- **Frontend** (`frontend/`)
-  - Expo app (React Native) with TypeScript
-  - Talks to the FastAPI backend over HTTP
+![Project Status: Phase 1](https://img.shields.io/badge/Status-Phase_1_MVP-blue)
+![Stack: Expo + FastAPI + PostGIS](https://img.shields.io/badge/Stack-Expo_|_FastAPI_|_PostGIS-black)
 
 ---
 
-## Prerequisites
+## The Concept
 
-- **Required**
-  - Python 3.13 (or the version used by the provided `venv/`)
-  - Node.js + npm (for Expo; recommended: Node 20+)
-  - Docker + Docker Compose (for Postgres/PostGIS + backend, or you can run services locally without Docker)
-- **Recommended**
-  - `expo` CLI installed globally: `npm install -g expo`
+Most fitness apps focus on *performance* (speed, heart rate, PRs).  
+**Fog of War focuses on *exploration*.**
+
+1. **Select your battleground:** Choose a borough (e.g., Brooklyn).
+2. **Move:** Run or walk your usual route—or try a new one.
+3. **Upload:** Sync your activity (GPX file).
+4. **Reveal:** Watch the fog lift from the map.
+5. **Conquer:** Increase your "Exploration Score" until you've uncovered 100% of the borough.
 
 ---
 
-## Running Everything with Docker (Backend + DB)
+## Tech Stack
 
-From the repo root:
+- **Frontend:** [Expo](https://expo.dev/) (React Native/TypeScript)
+- **Backend:** [FastAPI](https://fastapi.tiangolo.com/) (Python)
+- **Database:** PostgreSQL + [PostGIS](https://postgis.net/)
+- **Auth:** [Supabase Auth](https://supabase.com/auth) (planned)
+- **Maps:** [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/api/)
+- **Geospatial Logic:** PostGIS spatial operations (buffer, union, intersection)
+
+---
+
+## Architecture (MVP)
+
+We use **PostGIS polygon operations** for spatial tracking:
+
+1. **Input:** User uploads a `.gpx` file.
+2. **Processing (Backend):**
+   - Trace is snapped to roads via Mapbox Map Matching API.
+   - Route is buffered by 25m to create a "revealed" polygon.
+   - New polygon is merged with the user's existing "unveiled area" using `ST_Union`.
+3. **Storage:** The merged polygon geometry is stored per user/borough.
+4. **Scoring:** Exploration % = `ST_Area(unveiled) / ST_Area(borough) * 100`
+5. **Rendering:** Frontend fetches the polygon as GeoJSON and renders it as a "hole" in the fog overlay.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Python 3.13+
+- Node.js 20+ and npm
+- Docker + Docker Compose (for Postgres/PostGIS)
+- A [Mapbox](https://mapbox.com) account (free tier is fine)
+
+### Quick Start (Docker)
 
 ```bash
+# Start backend + database
 docker compose up --build
 ```
 
-This will:
+This starts:
+- **Postgres/PostGIS** on `localhost:5432`
+- **FastAPI backend** on `http://localhost:8000`
 
-- Start **Postgres/PostGIS** on `localhost:5432`
-- Start the **FastAPI backend** on `http://localhost:8000`
+### Manual Setup
 
-The backend container runs:
-
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-```
-
-Environment variables:
-
-- `MAPBOX_SECRET_TOKEN` (optional for now; needed when Map Matching is wired up)
-- `MAPBOX_PUBLIC_TOKEN` (for map rendering on the frontend)
-
-You can pass these into Docker via your shell environment (e.g. an `.env` file loaded by your shell) before running `docker compose up`.
-
----
-
-## Running Backend Locally (Without Docker)
-
-1. **Create / activate virtualenv** (optional if you use the existing `venv/`):
-
+1. **Clone the repo**
    ```bash
-   python -m venv venv
-   source venv/bin/activate
+   git clone https://github.com/yourusername/fog-of-williamsburg.git
+   cd fog-of-williamsburg
    ```
 
-2. **Install dependencies**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Start Postgres/PostGIS** (easiest via Docker only for DB):
-
+2. **Start the database**
    ```bash
    docker compose up db
    ```
 
-   This exposes Postgres on `localhost:5432` with:
-
-   - `POSTGRES_DB=fog_of_williamsburg`
-   - `POSTGRES_USER=postgres`
-   - `POSTGRES_PASSWORD=postgres`
-
-4. **Set backend env (optional, defaults are sensible)**:
-
-   Create a `.env` in the repo root or `backend/` (FastAPI settings look for `.env` via `pydantic-settings`), e.g.:
-
+3. **Backend setup**
    ```bash
-   DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/fog_of_williamsburg
-   MAPBOX_PUBLIC_TOKEN=your_public_token_here
-   MAPBOX_SECRET_TOKEN=your_secret_token_here
+   cd backend
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
    ```
 
-5. **Run the backend** from the repo root:
+4. **Environment variables**
+   
+   Create `.env` in repo root:
+   ```bash
+   DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/fog_of_williamsburg
+   MAPBOX_PUBLIC_TOKEN=pk.eyJ...
+   MAPBOX_SECRET_TOKEN=sk.eyJ...
+   ```
 
+5. **Initialize database**
+   ```bash
+   python -m backend.scripts.init_db
+   python -m backend.scripts.load_boroughs
+   ```
+
+6. **Run backend**
    ```bash
    uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-The backend will be available at `http://localhost:8000`.
-
----
-
-## Running the Frontend (Expo)
-
-1. **Install frontend dependencies**:
-
+7. **Frontend setup**
    ```bash
    cd frontend
    npm install
-   ```
-
-2. **Start Expo**:
-
-   ```bash
    npm run start
-   # or
-   npm run ios
-   npm run android
-   npm run web
    ```
 
-3. **Point frontend at backend**:
-
-   - The API client lives in `frontend/api.ts`.
-   - Ensure the base URL there matches where your backend is running (e.g. `http://localhost:8000` for simulators / web, or your machine’s LAN IP for physical devices).
+   Update the API base URL in `frontend/api.ts` to point to your backend.
 
 ---
 
-## Data & Migration Scripts
+## Roadmap: Phase 1 (MVP)
 
-- **Borough GeoJSON**: `data/nyc_boroughs.geojson`
-- **Database init / import scripts** (WIP, but intended usage):
-  - `backend/scripts/init_db.py`: create tables, apply basic schema
-  - `backend/scripts/load_boroughs.py`: load borough shapes into PostGIS
+- [x] FastAPI backend with PostGIS
+- [x] Borough boundary data imported
+- [x] Unveiled area data model
+- [x] Core score calculation endpoint
+- [ ] Supabase Auth integration
+- [ ] Mapbox map rendering
+- [ ] GPX file upload + Map Matching
+- [ ] Fog overlay rendering
+- [ ] Unveiling animation
 
-You can typically run them like:
+See `roadmap.json` for detailed task breakdown and `prd.md` for product requirements.
 
-```bash
-python -m backend.scripts.init_db
-python -m backend.scripts.load_boroughs
+---
+
+## Project Structure
+
+```
+fog-of-williamsburg/
+├── backend/           # FastAPI app
+│   ├── main.py        # App entry point
+│   ├── models.py      # SQLAlchemy models
+│   ├── routes/        # API endpoints
+│   └── scripts/       # DB init & data loading
+├── frontend/          # Expo/React Native app
+│   ├── App.tsx        # Main app component
+│   ├── api.ts         # Backend API client
+│   └── storage.ts     # Local storage helpers
+├── data/              # Static data files
+│   └── nyc_boroughs.geojson
+├── docker-compose.yml
+├── roadmap.json       # Project roadmap
+└── prd.md             # Product requirements
 ```
 
-Make sure your `DATABASE_URL` is set before running.
-
 ---
 
-## Tests
+## Contributing
 
-Backend tests live under `tests/` and `notion_sync/`:
+This is currently a solo project focused on the NYC MVP. Contributions and feedback welcome!
 
-```bash
-pytest
-```
+## License
 
----
-
-## Project Docs
-
-- **Product Requirements**: `prd.md`
-- **Roadmap & Epics**: `roadmap.json`
-
-These files describe the long-term vision, phases, and detailed tasks for the fog-of-war exploration experience.
-
----
-
-## Contributing / Next Steps
-
-- Focus of the current phase: **NYC-only "Solo Explorer" MVP** with:
-  - Borough selection
-  - Mapbox-backed fog-of-war visualization
-  - GPX upload + manual check-ins
-  - Core `% of borough explored` scoring
-- If you’re picking this up fresh, the quickest way to contribute is:
-  1. Get Docker + backend running.
-  2. Run the Expo app and hard-code pointing to `localhost:8000`.
-  3. Implement one epic/task from `roadmap.json` at a time.
+MIT

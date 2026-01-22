@@ -1,6 +1,6 @@
 {
   "projectName": "Project Fog of War (NYC)",
-  "lastUpdated": "2025-11-19T00:00:00-05:00",
+  "lastUpdated": "2026-01-22T00:00:00-05:00",
   "phases": [
     {
       "phaseName": "Phase 1: The 'Solo Explorer' MVP",
@@ -25,7 +25,7 @@
               "id": "P1_T002",
               "title": "Acquire & Process NYC Borough GeoJSON",
               "description": "Download the official NYC Borough Boundaries GeoJSON file. Clean and store this as the 'master fog' for each borough.",
-              "status": "Not Started",
+              "status": "Done",
               "priority": "High",
               "owner": "Data",
               "timeframe": "day-1",
@@ -45,7 +45,7 @@
               "id": "P1_T004",
               "title": "Setup Geospatial Database (PostGIS)",
               "description": "Initialize a PostgreSQL database with the PostGIS extension to store user polygons and perform geospatial queries.",
-              "status": "In Progress",
+              "status": "Done",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -55,7 +55,7 @@
               "id": "P1_T019",
               "title": "Deploy Minimal Backend & Database Environment",
               "description": "Deploy a simple backend service and PostgreSQL/PostGIS database to a single environment for the MVP (no full CI/CD required).",
-              "status": "In Progress",
+              "status": "Done",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -73,6 +73,18 @@
               "timeframe": "week-1",
               "dependencies": [
                 "P1_T012"
+              ]
+            },
+            {
+              "id": "P1_T021",
+              "title": "Implement Authentication (Supabase Auth)",
+              "description": "Replace anonymous UUID system with proper auth. Set up Google/Email login flows via Supabase Auth.",
+              "status": "Not Started",
+              "priority": "High",
+              "owner": "Backend",
+              "timeframe": "week-1",
+              "dependencies": [
+                "P1_T004"
               ]
             }
           ]
@@ -111,7 +123,7 @@
               "id": "P1_T007",
               "title": "Develop 'Unveiled Area' Data Model",
               "description": "Backend logic to store a user's *total* unveiled polygon. This will likely be a tile-based system or a simplified, merged polygon.",
-              "status": "In Progress",
+              "status": "Done",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -146,16 +158,6 @@
               "priority": "Medium",
               "owner": "Frontend",
               "timeframe": "day-1",
-              "dependencies": []
-            },
-            {
-              "id": "P1_T010",
-              "title": "Build Manual 'Check-in' Button",
-              "description": "A button that gets the user's current GPS location and sends it to the backend to unveil a 100m radius.",
-              "status": "Not Started",
-              "priority": "Medium",
-              "owner": "Frontend",
-              "timeframe": "week-1",
               "dependencies": []
             },
             {
@@ -218,7 +220,7 @@
               "id": "P1_T015",
               "title": "Backend: Calculate Borough Percentage",
               "description": "Create the core calculation: (Area of user's 'unveiled' polygon) / (Total Area of borough polygon) * 100.",
-              "status": "In Progress",
+              "status": "Done",
               "priority": "High",
               "owner": "Backend",
               "timeframe": "day-1",
@@ -368,14 +370,22 @@
     {
       "id": "borough-data",
       "content": "Import NYC borough GeoJSON into PostGIS and expose read-only borough boundary API for frontend",
-      "status": "In Progress",
+      "status": "Completed",
+      "dependencies": [
+        "scaffold-backend"
+      ]
+    },
+    {
+      "id": "supabase-auth",
+      "content": "Replace anonymous UUID system with Supabase Auth (Google/Email login flows)",
+      "status": "Pending",
       "dependencies": [
         "scaffold-backend"
       ]
     },
     {
       "id": "activity-pipeline",
-      "content": "Implement GPX upload, Mapbox Map Matching integration, buffer/merge logic, and manual check-in endpoints",
+      "content": "Implement GPX upload, Mapbox Map Matching integration, and buffer/merge logic",
       "status": "Pending",
       "dependencies": [
         "borough-data"
@@ -400,7 +410,7 @@
     },
     {
       "id": "frontend-import-unveiling",
-      "content": "Add GPX upload and check-in UI, replay animation, sounds, and post-activity summary screen",
+      "content": "Add GPX upload UI, replay animation, sounds, and post-activity summary screen",
       "status": "Pending",
       "dependencies": [
         "activity-pipeline",
