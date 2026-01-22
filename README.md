@@ -6,6 +6,7 @@ Gamifying fitness through exploration. Fog of War tracks your movement (running,
 
 ![Project Status: Phase 1](https://img.shields.io/badge/Status-Phase_1_MVP-blue)
 ![Stack: Expo + FastAPI + PostGIS](https://img.shields.io/badge/Stack-Expo_|_FastAPI_|_PostGIS-black)
+![Platform: Web](https://img.shields.io/badge/Platform-Web_(Desktop_&_Mobile)-green)
 
 ---
 
@@ -24,7 +25,8 @@ Most fitness apps focus on *performance* (speed, heart rate, PRs).
 
 ## Tech Stack
 
-- **Frontend:** [Expo](https://expo.dev/) (React Native/TypeScript)
+- **Platform:** Web browser (desktop & mobile) — native apps are out of scope for MVP
+- **Frontend:** [Expo](https://expo.dev/) (React Native for Web/TypeScript)
 - **Backend:** [FastAPI](https://fastapi.tiangolo.com/) (Python)
 - **Database:** PostgreSQL + [PostGIS](https://postgis.net/)
 - **Auth:** [Supabase Auth](https://supabase.com/auth) (planned)
@@ -113,10 +115,10 @@ This starts:
    ```bash
    cd frontend
    npm install
-   npm run start
+   npm run web
    ```
 
-   Update the API base URL in `frontend/api.ts` to point to your backend.
+   This launches the app in your browser at `http://localhost:8081`. Update the API base URL in `frontend/api.ts` to point to your backend.
 
 ---
 
@@ -145,7 +147,7 @@ fog-of-williamsburg/
 │   ├── models.py      # SQLAlchemy models
 │   ├── routes/        # API endpoints
 │   └── scripts/       # DB init & data loading
-├── frontend/          # Expo/React Native app
+├── frontend/          # Expo app (web target for MVP)
 │   ├── App.tsx        # Main app component
 │   ├── api.ts         # Backend API client
 │   └── storage.ts     # Local storage helpers

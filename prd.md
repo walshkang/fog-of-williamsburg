@@ -1,7 +1,7 @@
 ## 🗺️ PRD: "Project Fog of War" (MVP)
 
 ### 1. Objective
-To create a gamified mobile app that motivates users to explore their city by foot, bike, or run. The MVP will use a "fog of war" mechanic, allowing users to "unveil" a map of their chosen NYC borough, with the primary goal of reaching 100% exploration.
+To create a gamified web app (browser-based, for desktop and mobile) that motivates users to explore their city by foot, bike, or run. The MVP will use a "fog of war" mechanic, allowing users to "unveil" a map of their chosen NYC borough, with the primary goal of reaching 100% exploration.
 
 ### 2. Target User
 * **The "Completionist":** A runner, walker, or cyclist who is motivated by stats, achievements, and "completing" a challenge.
@@ -18,7 +18,6 @@ To create a gamified mobile app that motivates users to explore their city by fo
 
 **Activity Import (MVP v1.0):**
 * As a user, I want to be able to manually upload a `.gpx` file from my computer or phone.
-* As a user, I want to manually "check in" at my current location to unveil a 100m radius, so I can get credit for places I visit without an active workout.
 
 **The "Magic Moment" (The Unveiling):**
 * As a user, immediately after an import, I want to see a "replay" animation of my route being drawn on the map.
@@ -36,7 +35,7 @@ To create a gamified mobile app that motivates users to explore their city by fo
 * **Mapping Provider:** **Mapbox**. It will be used for the base map tiles and all map-related logic.
 * **Map Cleaning:** All GPS tracks (from `.gpx`, Strava, etc.) **must** be processed by the **Mapbox Map Matching API**. This will "snap" the messy GPS data to the actual road network, ensuring clean, accurate buffers that don't cut across buildings.
 * **Borough Data:** The "fog of war" boundary for the MVP will be the official **NYC Borough Boundaries GeoJSON file**. The best source for this is from NYC Planning: [Borough Boundaries GeoJSON Download Page](https://www.nyc.gov/content/planning/pages/resources/datasets/borough-boundaries).
-* **Core Logic:** The app will calculate the geospatial `intersection` of the user's "unveiled polygons" (25m buffer for routes, 100m for check-ins) with the chosen borough's polygon. The score is `(Area_of_Intersection / Total_Area_of_Borough) * 100`.
+* **Core Logic:** The app will calculate the geospatial `intersection` of the user's "unveiled polygons" (25m buffer for routes) with the chosen borough's polygon. The score is `(Area_of_Intersection / Total_Area_of_Borough) * 100`.
 
 ### 5. Out of Scope (For "Phase 2")
 * **No Social:** All leaderboards, friend activity, and social sharing are out of scope for the MVP.
