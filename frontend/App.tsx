@@ -101,12 +101,16 @@ function OnboardingScreen({ userId, onCompleted }: OnboardingProps) {
   }, []);
 
   const onSelect = async (boroughId: number) => {
+    console.log("Tapped borough", boroughId);
     try {
       setSaving(true);
       await createOrUpdateUser({ id: userId, chosenBoroughId: boroughId });
+      console.log("User saved");
       await saveChosenBoroughId(boroughId);
+      console.log("Borough ID saved locally");
       onCompleted(boroughId);
     } catch (e: any) {
+      console.error("Failed to save borough", e);
       setError(e?.message ?? "Failed to save selection");
     } finally {
       setSaving(false);

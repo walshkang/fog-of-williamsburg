@@ -25,18 +25,41 @@ async function request<T>(
   options: RequestInit & { userId?: string } = {}
 ): Promise<T> {
   const { userId, headers, ...rest } = options;
+  const url = `${API_BASE_URL}${path}`;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(headers || {}),
-      ...(userId ? { "X-User-Id": userId } : {}),
-    },
+  console.log("API request →", {
+    url,
+    method: rest.method ?? "GET",
+    hasBody: !!rest.body,
+    userId,
+  });
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(headers || {}),
+        ...(userId ? { "X-User-Id": userId } : {}),
+      },
+    });
+  } catch (err: any) {
+    console.error("Network error during fetch", err);
+    throw new Error(
+      `Network request failed: ${err?.message ?? String(err ?? "unknown error")}`
+    );
+  }
+
+  console.log("API response ←", {
+    url,
+    status: res.status,
+    ok: res.ok,
   });
 
   if (!res.ok) {
-    const text = await res.text();
+    const text = await res.text().catch(() => "<failed to read body>");
+    console.error("API error body", text);
     throw new Error(`API error ${res.status}: ${text}`);
   }
 
